@@ -1,19 +1,33 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
+from django.db.models.signals import post_save
 
 
 class Thread(models.Model):
     user_1 = models.ForeignKey(User,
                                on_delete=models.CASCADE,
-                               related_name='user_1')
+                               related_name='user_1_threads')
     user_2 = models.ForeignKey(User,
                                on_delete=models.CASCADE,
-                               related_name='user_2')
+                               related_name='user_2_threads')
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     def __str__(self):
         return str(self.id)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    @property
+    def latest_message(self):
+        messages = self.thread_messages.all()
+        return messages[0] if messages else None
+
+    def other_user(self, user):
+        return self.user_1.username if user.username == self.user_2.username \
+            else self.user_2.username
 
 
 class Message(models.Model):
@@ -29,3 +43,12 @@ class Message(models.Model):
 
     def __str__(self):
         return str(self.message)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+def post_save_message(sender, instance, **kwargs):
+    instance.thread.save()
+
+post_save.connect(post_save_message, sender=Message)

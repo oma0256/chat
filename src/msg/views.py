@@ -9,6 +9,16 @@ from .forms import MessageForm
 from .models import Thread, Message
 
 
+class ThreadsView(LoginRequiredMixin, View):
+    def get(self, request):
+        threads = Thread.objects.filter(Q(user_1=request.user) |
+                                        Q(user_2=request.user)).distinct()
+        context = {
+            'threads': threads
+        }
+        return render(request, 'msg/inbox.html', context)
+
+
 class ThreadView(LoginRequiredMixin, View):
     form = MessageForm()
 

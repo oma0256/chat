@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load msg_extras %}
+
+{% block content %}
+    <div class="container">
+        <h3 class="text-center">Messages</h3>
+        {% for thread in threads %}
+            {% if thread.latest_message %}
+                <div class="row">
+                    <div class="col-6 offset-3">
+                        <div class="card m-3">
+                            <div class="card-body">
+                                <div class="d-block">
+                                    <h5 class="d-inline">
+                                        <a href="{% url 'msg:thread' thread|get_other_user:request.user %}">
+                                            {{ thread|get_other_user:request.user }}
+                                        </a>
+                                    </h5>
+                                    <span class="float-right text-secondary">
+                                        <small>
+                                            {{ thread.latest_message.created_at|timesince }} ago
+                                        </small>
+                                    </span>
+                                </div>
+                                <div class="d-block">
+                                    <p>{{ thread.latest_message }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endblock %}
