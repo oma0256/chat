@@ -4,7 +4,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from django.db.models import Q
 from .forms import MessageForm
 from .models import Thread, Message
 
@@ -23,10 +22,8 @@ class ThreadView(LoginRequiredMixin, View):
     form = MessageForm()
 
     def get_object(self, sender, reciever):
-        threads = Thread.objects.filter(Q(user_1=sender, user_2=reciever) |
-                                        Q(user_1=reciever, user_2=sender))
-        return threads[0] if threads else \
-            Thread.objects.create(sender=sender, reciever=reciever)
+        return Thread.objects.get_thread_or_create(sender.username,
+                                                   reciever.username)
 
     def dispatch(self, request, username):
         self.sender = request.user

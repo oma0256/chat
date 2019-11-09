@@ -2,6 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db.models.signals import post_save
+from django.db.models import Q
+
+
+class ThreadManager(models.Manager):
+    def get_thread_or_create(self, sender, reciever):
+        print(self.get_queryset())
+        threads = self.get_queryset().filter(
+            Q(user_1__username=sender, user_2__username=reciever) |
+            Q(user_1__username=reciever, user_2__username=sender))
+        return threads[0] if threads else \
+            Thread.objects.create(user_1=sender, user_2=reciever)
 
 
 class Thread(models.Model):
@@ -13,6 +24,8 @@ class Thread(models.Model):
                                related_name='user_2_threads')
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, auto_now_add=False)
+
+    objects = ThreadManager()
 
     def __str__(self):
         return str(self.id)
@@ -50,5 +63,6 @@ class Message(models.Model):
 
 def post_save_message(sender, instance, **kwargs):
     instance.thread.save()
+
 
 post_save.connect(post_save_message, sender=Message)

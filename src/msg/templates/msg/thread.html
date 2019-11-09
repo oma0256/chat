@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container">
-        <ul>
+        <ul id="messages">
             {% for message in messages %}
                 <li>{{ message.message }} via {{ message.sender }}</li>
             {% endfor %}
@@ -15,4 +15,29 @@
             </div>
         </form>
     </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        const socket = new WebSocket(`ws://localhost:8000/${window.location.pathname}/`);
+
+        const onSubmitHandler = e => {
+            e.preventDefault();
+            const message = document.querySelector('#id_message');
+            socket.send(JSON.stringify({ message: message.value }));
+            message.value = '';
+        };
+
+        socket.onopen = e => {
+            const form = document.querySelector('form');
+            form.addEventListener('submit', onSubmitHandler);
+        };
+
+        socket.onmessage = e => {
+            const payload = JSON.parse(e.data);
+            const {  message, sender } = payload;
+            const messages = document.querySelector("#messages");
+            messages.innerHTML += (`<li>${message} via ${sender}</li>`);
+        };
+    </script>
 {% endblock %}
